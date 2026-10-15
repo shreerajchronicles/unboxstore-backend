@@ -1,5 +1,17 @@
 const jwt = require('jsonwebtoken')
 
+// Same-site by default. Set COOKIE_SAMESITE=none when the storefront calls the
+// API on a different domain (requires HTTPS, so `secure` is forced on).
+function authCookieOptions() {
+  const sameSite = (process.env.COOKIE_SAMESITE || 'lax').toLowerCase()
+  return {
+    httpOnly: true,
+    secure: sameSite === 'none' || process.env.NODE_ENV === 'production',
+    sameSite,
+    path: '/',
+  }
+}
+
 function signToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
@@ -9,12 +21,7 @@ function signToken(userId) {
 function sendTokenResponse(user, statusCode, res) {
   const token = signToken(user._id)
 
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  })
+  res.cookie('token', token, { ...authCookieOptions(), maxAge: 7 * 24 * 60 * 60 * 1000 })
 
   res.status(statusCode).json({
     success: true,
@@ -30,4 +37,4 @@ function sendTokenResponse(user, statusCode, res) {
   })
 }
 
-module.exports = { signToken, sendTokenResponse }
+module.exports = { signToken, sendTokenResponse, authCookieOptions }

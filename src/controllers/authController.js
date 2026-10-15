@@ -4,7 +4,7 @@ const asyncHandler = require('../middleware/asyncHandler')
 const ApiError = require('../utils/ApiError')
 const User = require('../models/User')
 const Otp = require('../models/Otp')
-const { sendTokenResponse } = require('../utils/generateToken')
+const { sendTokenResponse, authCookieOptions } = require('../utils/generateToken')
 const { sendSms, isSmsConfigured } = require('../services/smsService')
 const { sendMailSafe } = require('../services/mailService')
 const emails = require('../utils/emailTemplates')
@@ -193,7 +193,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 // POST /api/auth/logout
 const logout = asyncHandler(async (req, res) => {
-  res.clearCookie('token')
+  res.clearCookie('token', authCookieOptions()) // must match the options it was set with
   res.json({ success: true, message: 'Logged out' })
 })
 

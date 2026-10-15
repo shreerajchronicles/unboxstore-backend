@@ -10,6 +10,7 @@ const shiprocketService = require('../services/shiprocketService')
 const { sendMailSafe } = require('../services/mailService')
 const { buildInvoicePdf, pipeInvoicePdf } = require('../utils/invoicePdf')
 const emails = require('../utils/emailTemplates')
+const { runInBackground } = require('../utils/background')
 const { COD_FEE, PAYMENT_OPTIONS, isRazorpayEnabled, isMockPaymentsEnabled } = require('../config/payments')
 
 const FREE_SHIPPING_THRESHOLD = 2999
@@ -107,7 +108,7 @@ async function createInvoice(order, status = 'Paid') {
     amount: order.total,
     status,
   })
-  sendOrderConfirmation(order, invoice) // fire and forget
+  runInBackground(sendOrderConfirmation(order, invoice))
   return invoice
 }
 
@@ -146,7 +147,7 @@ async function confirmOrder(order, paymentId) {
 
   await decrementStockAndCount(order.items)
   await createInvoice(order, isCod ? 'Unpaid' : 'Paid')
-  fulfillShipment(order) // fire and forget
+  runInBackground(fulfillShipment(order))
 }
 
 // POST /api/orders/checkout
