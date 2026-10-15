@@ -12,6 +12,10 @@ const { CATEGORY_NAMES, slugify } = require('./catalogueCategories')
 const catalogue = require(path.join(__dirname, '../../../frontend/src/data/catalogue.json'))
 const GENDERS = { men: 'Men', women: 'Women', unisex: 'Unisex' }
 
+// Product photos are served by the storefront from /products/<file>. Stored as
+// absolute URLs so the admin app (another domain) and emails can load them.
+const STOREFRONT_URL = (process.env.STOREFRONT_URL || process.env.CLIENT_URL || '').replace(/\/$/, '')
+
 async function seedCatalogue() {
   const categories = {}
   for (const name of CATEGORY_NAMES) {
@@ -37,7 +41,7 @@ async function seedCatalogue() {
           details: item.details,
           price: item.price,
           originalPrice: item.originalPrice,
-          images: item.images.map((file) => ({ url: `/assets/finalproducts/${file}` })),
+          images: item.images.map((file) => ({ url: `${STOREFRONT_URL}/products/${file}` })),
           sizes: item.sizes,
           colors: item.colors,
           gender: GENDERS[item.gender] || 'Unisex',

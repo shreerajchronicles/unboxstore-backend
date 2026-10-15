@@ -49,11 +49,19 @@ const deleteUser = asyncHandler(async (req, res) => {
 })
 
 // PATCH /api/users/me — self profile update
-// The mobile number is the sign-in identity, so it isn't editable here.
+// A customer's mobile number is their sign-in identity (changed only through
+// OTP), so only staff/admin accounts — who sign in by email — may edit it here.
 const updateMe = asyncHandler(async (req, res) => {
-  const { name, email } = req.body
+  const { name, email, phone } = req.body
   const user = await User.findById(req.user._id)
   if (name?.trim()) user.name = name.trim()
+  if (phone !== undefined && user.role !== 'customer') {
+    const normalized = String(phone).replace(/\D/g, '')
+    if (normalized && normalized !== user.phone && (await User.exists({ phone: normalized }))) {
+      throw new ApiError(409, 'This mobile number is linked to another account')
+    }
+    user.phone = normalized || undefined
+  }
   if (email) {
     const normalized = email.trim().toLowerCase()
     if (normalized !== user.email && (await User.exists({ email: normalized }))) {
