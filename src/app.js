@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser')
 const morgan = require('morgan')
 
 const routes = require('./routes')
+const { isLocalDev } = require('./config/env')
 const { notFound, errorHandler } = require('./middleware/errorHandler')
 const { razorpayWebhook } = require('./controllers/paymentController')
 
@@ -13,15 +14,20 @@ const app = express()
 
 app.set('trust proxy', 1) // behind Vercel's proxy: correct req.ip / secure cookies
 
+// Updated CORS configuration to allow ANY origin while supporting credentials
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL, process.env.ADMIN_URL].filter(Boolean),
+    origin: (origin, callback) => {
+      // By returning true for the origin, it dynamically reflects the 
+      // requesting origin in the Access-Control-Allow-Origin header.
+      callback(null, true);
+    },
     credentials: true,
   })
 )
 
 app.use(cookieParser())
-if (process.env.NODE_ENV !== 'production') app.use(morgan('dev'))
+if (isLocalDev()) app.use(morgan('dev'))
 
 // Razorpay needs the raw request body to verify the webhook signature, so this
 // route is mounted before the global JSON body parser.

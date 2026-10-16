@@ -8,6 +8,7 @@ const { sendTokenResponse, authCookieOptions } = require('../utils/generateToken
 const { sendSms, isSmsConfigured } = require('../services/smsService')
 const { sendMailSafe } = require('../services/mailService')
 const emails = require('../utils/emailTemplates')
+const { isLocalDev } = require('../config/env')
 
 const OTP_TTL_MS = 5 * 60 * 1000
 const OTP_RESEND_COOLDOWN_MS = 30 * 1000
@@ -72,7 +73,7 @@ const sendOtp = asyncHandler(async (req, res) => {
   await sendSms(phone, `${code} is your unboxstore verification code. It expires in 5 minutes.`)
 
   const isNewUser = !(await User.exists({ phone }))
-  const exposeCode = !isSmsConfigured() && process.env.NODE_ENV !== 'production'
+  const exposeCode = !isSmsConfigured() && isLocalDev()
 
   res.json({ success: true, isNewUser, ...(exposeCode && { devCode: code }) })
 })

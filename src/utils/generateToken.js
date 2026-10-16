@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const { isLocalDev } = require('../config/env')
 
 // Same-site by default. Set COOKIE_SAMESITE=none when the storefront calls the
 // API on a different domain (requires HTTPS, so `secure` is forced on).
@@ -6,7 +7,7 @@ function authCookieOptions() {
   const sameSite = (process.env.COOKIE_SAMESITE || 'lax').toLowerCase()
   return {
     httpOnly: true,
-    secure: sameSite === 'none' || process.env.NODE_ENV === 'production',
+    secure: sameSite === 'none' || !isLocalDev(),
     sameSite,
     path: '/',
   }
